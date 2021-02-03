@@ -1,0 +1,41 @@
+{
+  "project_info": {
+    "project_number": "153193102181",
+    "firebase_url": "https://shaddat-for-free.firebaseio.com",
+    "project_id": "shaddat-for-free",
+    "storage_bucket": "shaddat-for-free.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:153193102181:android:e8ebd708095973223b7f8c",
+        "android_client_info": {
+          "package_name": "bb.earnning.shaddat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "153193102181-1rs7eapnlim7g4bc0m8b12pr0o3spm3k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAlDZv7vmEDvKZuF3zWfqQ7lNikchcOW0o"
+        }
+      ],
+      "services": {
+        "admob_app_id": "ca-app-pub-2814422544312075~1911331018" ,
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "153193102181-1rs7eapnlim7g4bc0m8b12pr0o3spm3k.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
