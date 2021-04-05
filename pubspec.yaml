@@ -39,6 +39,9 @@ dependencies:
   assets_audio_player: ^2.0.10
   connectivity_alert_widget: ^1.0.1+3
   asset_cache:
+  get:
+  get_storage:
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

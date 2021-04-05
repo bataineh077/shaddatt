@@ -8,12 +8,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:shaddatt/audioManager/AudioManager.dart';
+import 'package:shaddatt/quiz/veiw/widgitsUtil/headerComponent.dart';
+import 'package:shaddatt/quiz/viewModel/audioManager/AudioManager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timer_count_down/timer_controller.dart';
 import 'package:timer_count_down/timer_count_down.dart';
 
-import 'widgitsUtil/headerComponent.dart';
 
 
 class getjson extends StatelessWidget {
@@ -41,6 +41,9 @@ class getjson extends StatelessWidget {
       future:
           DefaultAssetBundle.of(context).loadString('assets/java.json', cache: true),
       builder: (context, snapshot) {
+
+
+
         List mydata = json.decode(snapshot.data.toString());
 
         if (mydata == null) {
@@ -113,7 +116,6 @@ class _quizpageState extends State<quizpage> {
   bool disableAnswer = false;
   // extra varibale to iterate
   int j = 1;
-  int timer = 15;
   var random_array;
 
   MobileAdTargetingInfo targetingInfo = MobileAdTargetingInfo(
@@ -166,38 +168,7 @@ class _quizpageState extends State<quizpage> {
       }
       print(random_array);
   }
-  //
-  // listener(AppLovinAdListener event , bool interstitial)async{
-  //   if(event == AppLovinAdListener.adReceived) AppLovin.showInterstitial(interstitial: interstitial);
-  //   if(event == AppLovinAdListener.videoPlaybackBegan) {
-  //     timecontroller.pause();
-  //     AudioManager.assetsAudioPlayer.pause();
-  //   }
-  //
-  //     if(event == AppLovinAdListener.videoPlaybackEnded) {
-  //       AudioManager.assetsAudioPlayer.play();
-  //       timecontroller.resume();
-  //     }
-  //   var  prefs = await SharedPreferences.getInstance();
-  //
-  //   if(event == AppLovinAdListener.userRewardRejected){
-  //
-  //     AudioManager.assetsAudioPlayer.pause();
-  //
-  //   }
-  //
-  //   if(event == AppLovinAdListener.userRewardVerified){
-  //     setState(() {
-  //       coins += 700;
-  //       prefs.setInt('coins', prefs.getInt('coins')+700);
-  //       AudioManager.assetsAudioPlayer.pause();
-  //     });
-  //
-  //
-  //   }
-  //   else print(event);
-  // }
-  //
+
 
   BannerAd myBanner = BannerAd(
     // Replace the testAdUnitId with an ad unit id from the AdMob dash.
@@ -584,8 +555,10 @@ else if(!t){
       ),
       child: MaterialButton(
         onPressed: () {
-          isAds =true;
-          checkanswer(k);} ,
+
+          checkanswer(k);
+
+          } ,
         child: Text(
           "${mydata[1][i.toString()][k]}",
           style: TextStyle(

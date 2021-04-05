@@ -2,11 +2,12 @@ import 'package:connectivity_alert_widget/connectivity_alert_widget.dart';
 import 'package:firebase_admob/firebase_admob.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shaddatt/quizpage.dart';
-import 'package:shaddatt/rules.dart';
+import 'package:shaddatt/quiz/veiw/quizScreen.dart';
+import 'package:shaddatt/quiz/veiw/quizpage.dart';
+import 'package:shaddatt/home/rules.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'quizpage.dart';
+import '../../quiz/veiw/quizpage.dart';
 
 class homepage extends StatefulWidget {
   @override
@@ -176,7 +177,7 @@ class _homepageState extends State<homepage> {
                             child: RaisedButton(textColor: Colors.white,
                               onPressed: (){
                                 Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (context) => getjson(),
+                                  builder: (context) => QuizScreen(),
                                 ));
                               },
                               color: Colors.red,
