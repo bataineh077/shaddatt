@@ -10,6 +10,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 //  JsonAssets.instance.basePath = 'assets/';
   await GetStorage.init();
+  FirebaseAdMob.instance.initialize(appId: 'ca-app-pub-2814422544312075~1911331018');
 
   runApp(MyApp());
 }

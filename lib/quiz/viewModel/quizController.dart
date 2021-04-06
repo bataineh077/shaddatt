@@ -1,10 +1,15 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:firebase_admob/firebase_admob.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:timer_count_down/timer_controller.dart';
+
+import 'audioManager/AudioManager.dart';
 
 
 class QuizController extends GetxController{
@@ -31,12 +36,12 @@ class QuizController extends GetxController{
   RxInt coins=0.obs;
 
 
-  Map<String, Color> btncolor = {
-    "a": Colors.indigoAccent,
-    "b": Colors.indigoAccent,
-    "c": Colors.indigoAccent,
-    "d": Colors.indigoAccent,
-  };
+  RxMap<String, Color> btncolor = {
+    "a": Colors.indigo,
+    "b": Colors.indigo,
+    "c": Colors.indigo,
+    "d": Colors.indigo,
+  }.obs;
 
 
   updateScoreValue(value)=>box.write('score', value);
@@ -148,19 +153,224 @@ class QuizController extends GetxController{
       disableAnswer.value = false;
 
 
-  //  timecontroller.restart();
+    timecontroller.restart();
   }
 
 
   resetBtnColor(){
 
-    btncolor["a"] = Colors.indigoAccent;
-    btncolor["b"] = Colors.indigoAccent;
-    btncolor["c"] = Colors.indigoAccent;
-    btncolor["d"] = Colors.indigoAccent;
+    btncolor.value["a"] = Colors.indigo;
+    btncolor.value["b"] = Colors.indigo;
+    btncolor.value["c"] = Colors.indigo;
+    btncolor.value["d"] = Colors.indigo;
+  }
+
+  int correctTime = 0;
+  int inCorrectTime = 0;
+
+  void checkReward(bool t)async{
+
+
+
+    if(t){
+
+        box.write('score', box.read('score')+1);
+       // score =prefs.getInt('score');
+       checkFirstTime();
+        AudioManager.playCorrect();
+
+
+
+        if(score == 100 || score ==200 || score ==300 || score ==400 || score ==500
+            || score ==600 || score ==700 || score ==800 ||score ==900|| score==1000)
+        {
+          box.write('shaddat', box.read('shaddat')+44);
+          checkFirstTime();
+
+          // shaddat =prefs.getInt('shaddat');
+        }
+     }
+
+    else if(!t){
+
+        box.write('falseAwnser', box.read('falseAwnser')+1);
+       // falseAwnser = prefs.getInt('falseAwnser');
+        checkFirstTime();
+
+        AudioManager.playFalse();
+
+
+
+
+        if(coins > 0){
+          coins -= 1;
+          box.write('coins', box.read('coins')-1);}
+        else if(coins <=0){
+
+          box.write('coins', 0);
+          checkFirstTime();
+
+          // coins = box.read('coins');
+        }
+
+        if(box.read('falseAwnser') >= 100){
+          print('aaaa');
+          box.write('falseAwnser', 0);
+         // falseAwnser = prefs.getInt('falseAwnser');
+          checkFirstTime();
+
+          if(score <= 250){
+            box.write('score', 0);
+           // score =prefs.getInt('score');
+            checkFirstTime();
+
+
+            if(shaddat<=44){
+              box.write('shaddat', 0);
+              checkFirstTime();
+
+              //  shaddat =prefs.getInt('shaddat');
+            }
+
+
+          }else if(score >= 250){
+            box.write('score', box.read('score')-250);
+           // score =prefs.getInt('score');
+            checkFirstTime();
+
+            box.write('shaddat', box.read('shaddat')-110);
+           // shaddat =prefs.getInt('shaddat');
+            checkFirstTime();
+
+          }
+
+        }
+
+
+    }
+
+  }
+
+  Rx<Color> colortoshow = Colors.indigo.obs;
+  Color right = Colors.green;
+  Color wrong = Colors.red;
+
+  void checkanswer(String k ){
+    print('K = ${k}');
+
+    if (quizDataList.value[2][indexQuestionRandom.toString()] == quizDataList[1][indexQuestionRandom.toString()][k]) {
+
+      checkReward(true);
+
+      // changing the color variable to be green
+      colortoshow.value = right;
+
+      if(correctTime <1 && isAds){
+        correctTime ++;
+        Timer(Duration(seconds: 1), nextQuestion);
+      }else if(correctTime==1 && isAds){
+
+        correctTime = 0;
+        _interstitialAd?.dispose();
+
+        timecontroller.pause();
+        _interstitialAd = createInterstitialAd()..load()..show();
+      }
+      else if(!isAds){
+        Timer(Duration(seconds: 1), nextQuestion);
+      }
+
+    } else {
+      checkReward(false);
+
+      // just a print sattement to check the correct working
+      // debugPrint(mydata[2]["1"] + " is equal to " + mydata[1]["1"][k]);
+      colortoshow.value = wrong;
+      if( isAds && inCorrectTime <1){
+        inCorrectTime++;
+        Timer(Duration(seconds: 1), nextQuestion);
+
+
+
+      }else if(inCorrectTime==1 && isAds){
+        _interstitialAd?.dispose();
+
+        timecontroller.pause();
+        _interstitialAd = createInterstitialAd()..load()..show();
+
+        inCorrectTime = 0;
+      }
+    }
+
+      // applying the changed color to the particular button that was selected
+      btncolor[k] = colortoshow.value;
+      timecontroller.pause();
+      disableAnswer.value = true;
+
+
+
+    // nextquestion();
+    // changed timer duration to 1 second
+
   }
 
 
+
+  BannerAd myBanner = BannerAd(
+    // Replace the testAdUnitId with an ad unit id from the AdMob dash.
+    // https://developers.google.com/admob/android/test-ads
+    // https://developers.google.com/admob/ios/test-ads
+    adUnitId:
+     BannerAd.testAdUnitId,
+    //'ca-app-pub-2814422544312075/2043685194',
+    size: AdSize.banner,
+    //  targetingInfo: targetingInfo,
+    listener: (MobileAdEvent event) {
+      print("BannerAd event is $event");
+    },
+  );
+
+  InterstitialAd _interstitialAd;
+
+  InterstitialAd createInterstitialAd() {
+
+    return InterstitialAd(
+      adUnitId:
+     // 'ca-app-pub-2814422544312075/9539031839',
+      InterstitialAd.testAdUnitId,
+    //  targetingInfo: targetingInfo,
+      listener: (MobileAdEvent event) {
+        // print("InterstitialAd event $event");
+        // print('the Adddd = ${MobileAdEvent.opened.toString()}')  ;
+        if(event.toString() == 'MobileAdEvent.opened'){
+          Timer(Duration(seconds: 1),(){
+            timecontroller.pause();
+            print('the Adddd = ${event.toString()}')  ;
+
+          });
+
+        }
+        if(event.toString() == 'MobileAdEvent.closed'){
+          // Fluttertoast.showToast(msg: '${event}');
+          print('the Adddd = ${event.toString()}')  ;
+          Timer(Duration(seconds: 1),(){
+            timecontroller.pause();
+            nextQuestion();
+
+          } );
+          timecontroller.resume();
+
+        }
+        if(event.toString() == 'MobileAdEvent.failedToLoad'){
+
+          Fluttertoast.showToast(msg: '${event}');
+          timecontroller.resume();
+          nextQuestion();
+        }
+
+      },
+    );
+  }
 
   @override
   void onInit() {
@@ -174,7 +384,22 @@ class QuizController extends GetxController{
     });
 
     checkFirstTime();
+    myBanner
+      ..load()
+      ..show(
+        anchorType: AnchorType.top,
+        anchorOffset: kToolbarHeight -25,
+      );
     super.onInit();
   }
 
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    _interstitialAd?.dispose();
+    RewardedVideoAd.instance.listener = null;
+    myBanner?.dispose();
+    super.dispose();
+  }
 }

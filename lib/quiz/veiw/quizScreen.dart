@@ -26,113 +26,118 @@ class QuizScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return WillPopScope(
         onWillPop: ()=>Dialogs.willBackDialog(),
-        key: Get.key,
 
-        child: Padding(
-          padding: const EdgeInsets.only(top: 50),
+
+        child: GetX<QuizController>(
+          init: QuizController(),
+          builder: (_) {
+            return Padding(
+              padding: const EdgeInsets.only(top: 50),
     child: ConnectivityAlertWidget(
     onConnectivityResult: (connectivity)=>print(connectivity),
-        offlineWidget: OfflineWidget(),
-        onlineWidget:
-        Scaffold(
-          body: SafeArea(
-            child: Stack(
-              children: [
-
-                BackGroundImage(),
-
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            offlineWidget: OfflineWidget(),
+            onlineWidget:
+            Scaffold(
+              body: SafeArea(
+                child: Stack(
                   children: [
 
-                    Expanded(
-                      flex:1,
-                      child: Container(
-                        // height: MediaQuery.of(context).size.height/10,
-                        color: Colors.indigo,
-                        child: Center(
-                          child: Row(
+                    BackGroundImage(),
 
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+
+                        Expanded(
+                          flex:1,
+                          child: Container(
+                            // height: MediaQuery.of(context).size.height/10,
+                            color: Colors.indigo,
+                            child: Center(
+                              child: Row(
+
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+
+
+                                  HeaderComponents(image: 'images/hiclipart.com(1).png',
+                                    animateController: animateController,
+                                    number: _.score.value ,
+                                    iconColor: Colors.green,colors: Colors.green,
+                                  ),
+
+                                  HeaderComponents(image: 'images/hiclipart.com(2).png',
+                                    animateController: animateController2,
+                                    number: _.falseAwnser.value ,
+                                    iconColor: Colors.red,
+                                  ),
+
+                                  HeaderComponents(image: 'images/shaddat.png',
+                                    animateController: animateController3,
+                                    number: _.shaddat.value ,
+                                    iconColor: Colors.purple,
+                                  ),
+
+
+                                  HeaderComponents(image: 'images/hiclipart.com(3).png',
+                                    animateController: animateController4,
+                                    number: _.coins.value ,
+                                    iconColor: Colors.yellow,
+                                  ),
+
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+
+
+                        Expanded(flex: 2,child: QuestionArea()),
+
+                        Expanded(
+                          flex: 4,
+                          child: AbsorbPointer(
+                            absorbing: _.disableAnswer.value,
+                            child: Container(
+                              child: ListView(
+                                //  mainAxisAlignment: MainAxisAlignment.center,
+                                children: <Widget>[
+                                  ChoiceButton(keyQ: 'a',),
+                                  ChoiceButton(keyQ: 'b',),
+                                  ChoiceButton(keyQ: 'c',),
+                                  ChoiceButton(keyQ: 'd',),
+
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+
+
+
+
+                        TimerRow(),
+
+
+                      Expanded(
+                          child:Row(
                             children: [
-
-
-                              HeaderComponents(image: 'images/hiclipart.com(1).png',
-                                animateController: animateController,
-                                number: controller.score.value ,
-                                iconColor: Colors.green,colors: Colors.green,
-                              ),
-
-                              HeaderComponents(image: 'images/hiclipart.com(2).png',
-                                animateController: animateController2,
-                                number: controller.falseAwnser.value ,
-                                iconColor: Colors.red,
-                              ),
-
-                              HeaderComponents(image: 'images/shaddat.png',
-                                animateController: animateController3,
-                                number: controller.shaddat.value ,
-                                iconColor: Colors.purple,
-                              ),
-
-
-                              HeaderComponents(image: 'images/hiclipart.com(3).png',
-                                animateController: animateController4,
-                                number: controller.coins.value ,
-                                iconColor: Colors.yellow,
-                              ),
-
+                              FooterButton(title: "شاهد اعلان للحصول على عملتين",voidCallback: (){},color: Colors.indigo,),
+                              FooterButton(color: Colors.orange.withOpacity(0.9),
+                                  voidCallback: (){},
+                                  title: "إكتشف الاجابة")
                             ],
-                          ),
-                        ),
-                      ),
-                    ),
+                          ) )
+                      ],
+                    )
 
-
-                    Expanded(flex: 2,child: QuestionArea()),
-
-                    Expanded(
-                      flex: 4,
-                      child: AbsorbPointer(
-                        absorbing: controller.disableAnswer.value,
-                        child: Container(
-                          child: ListView(
-                            //  mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              ChoiceButton(keyQ: 'a',),
-                              ChoiceButton(keyQ: 'b',),
-                              ChoiceButton(keyQ: 'c',),
-                              ChoiceButton(keyQ: 'd',),
-
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-
-
-
-
-                    TimerRow(),
-
-
-                  Expanded(
-                      child:Row(
-                        children: [
-                          FooterButton(title: "شاهد اعلان للحصول على عملتين",voidCallback: (){},color: Colors.indigo,),
-                          FooterButton(color: Colors.orange.withOpacity(0.9),
-                              voidCallback: (){},
-                              title: "إكتشف الاجابة")
-                        ],
-                      ) )
                   ],
-                )
-
-              ],
-            ),
-          ),
-        )
+                ),
+              ),
+            )
     )
+            );
+          }
         ),
       );
 
