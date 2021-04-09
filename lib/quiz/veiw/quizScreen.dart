@@ -122,10 +122,24 @@ class QuizScreen extends StatelessWidget {
                       Expanded(
                           child:Row(
                             children: [
-                              FooterButton(title: "شاهد اعلان للحصول على عملتين",voidCallback: (){},color: Colors.indigo,),
+                              FooterButton(title: "شاهد اعلان للحصول على عملتين",voidCallback: (){
+
+                                controller.watchRewardAD();
+
+                              },color: Colors.indigo,),
                               FooterButton(color: Colors.orange.withOpacity(0.9),
-                                  voidCallback: (){},
-                                  title: "إكتشف الاجابة")
+                                  voidCallback: (){
+                                    controller.resolveQuestion();
+                                  },
+                                  title: "إكتشف الاجابة"),
+                              
+                              Visibility(
+                                visible: controller.isVisible.value,
+                                child: FooterButton(color: Colors.deepOrangeAccent.withOpacity(0.9),
+                                  voidCallback: (){
+
+                                  },
+                                  title:'طالب بالشدات'),)
                             ],
                           ) )
                       ],

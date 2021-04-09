@@ -59,6 +59,11 @@ flutter:
   assets:
     - images/
     - assets/
+  fonts:
+    - family: Raleway
+      fonts:
+        # - asset: fonts/Mada-SemiBold-1.ttf
+        - asset: fonts/Tajawal-Regular.ttf
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

@@ -179,10 +179,12 @@ class QuizController extends GetxController{
        checkFirstTime();
         AudioManager.playCorrect();
 
+      var scoreInside = box.read('score');
 
-
-        if(score == 100 || score ==200 || score ==300 || score ==400 || score ==500
-            || score ==600 || score ==700 || score ==800 ||score ==900|| score==1000)
+        if(scoreInside == 100 || scoreInside ==200
+            || scoreInside ==300 || scoreInside ==400 || scoreInside ==500
+            || scoreInside ==600 || scoreInside ==700
+            || scoreInside ==800 ||scoreInside ==900|| scoreInside==1000)
         {
           box.write('shaddat', box.read('shaddat')+44);
           checkFirstTime();
@@ -202,10 +204,12 @@ class QuizController extends GetxController{
 
 
 
-        if(coins > 0){
-          coins -= 1;
-          box.write('coins', box.read('coins')-1);}
-        else if(coins <=0){
+        if(box.read('coins') > 0){
+
+          box.write('coins', box.read('coins')-1);
+          checkFirstTime();
+        }
+        else if(box.read('coins') <=0){
 
           box.write('coins', 0);
           checkFirstTime();
@@ -219,13 +223,13 @@ class QuizController extends GetxController{
          // falseAwnser = prefs.getInt('falseAwnser');
           checkFirstTime();
 
-          if(score <= 250){
+          if(box.read('score') <= 250){
             box.write('score', 0);
            // score =prefs.getInt('score');
             checkFirstTime();
 
 
-            if(shaddat<=44){
+            if(box.read('shaddat')<=44){
               box.write('shaddat', 0);
               checkFirstTime();
 
@@ -233,7 +237,7 @@ class QuizController extends GetxController{
             }
 
 
-          }else if(score >= 250){
+          }else if(box.read('score') >= 250){
             box.write('score', box.read('score')-250);
            // score =prefs.getInt('score');
             checkFirstTime();
@@ -271,10 +275,10 @@ class QuizController extends GetxController{
       }else if(correctTime==1 && isAds){
 
         correctTime = 0;
-        _interstitialAd?.dispose();
+        interstitialAd?.dispose();
 
         timecontroller.pause();
-        _interstitialAd = createInterstitialAd()..load()..show();
+        interstitialAd = createInterstitialAd()..load()..show();
       }
       else if(!isAds){
         Timer(Duration(seconds: 1), nextQuestion);
@@ -293,12 +297,14 @@ class QuizController extends GetxController{
 
 
       }else if(inCorrectTime==1 && isAds){
-        _interstitialAd?.dispose();
-
-        timecontroller.pause();
-        _interstitialAd = createInterstitialAd()..load()..show();
 
         inCorrectTime = 0;
+        interstitialAd?.dispose();
+
+        timecontroller.pause();
+        interstitialAd = createInterstitialAd()..load()..show();
+
+
       }
     }
 
@@ -330,7 +336,7 @@ class QuizController extends GetxController{
     },
   );
 
-  InterstitialAd _interstitialAd;
+  InterstitialAd interstitialAd;
 
   InterstitialAd createInterstitialAd() {
 
@@ -384,12 +390,18 @@ class QuizController extends GetxController{
     });
 
     checkFirstTime();
+
+
     myBanner
       ..load()
       ..show(
         anchorType: AnchorType.top,
         anchorOffset: kToolbarHeight -25,
       );
+
+
+    initAdReward();
+    createInterstitialAd();
     super.onInit();
   }
 
@@ -397,9 +409,127 @@ class QuizController extends GetxController{
   @override
   void dispose() {
     // TODO: implement dispose
-    _interstitialAd?.dispose();
+    interstitialAd?.dispose();
     RewardedVideoAd.instance.listener = null;
     myBanner?.dispose();
     super.dispose();
+  }
+
+  RxBool loaded = false.obs;
+
+  void initAdReward(){
+
+
+    RewardedVideoAd.instance
+        .load(
+        adUnitId:
+        'ca-app-pub-2814422544312075/4895932406'
+      // RewardedVideoAd.testAdUnitId,
+    )
+        .catchError((e) => print("error in loading 1st time"))
+        .then((v) =>  loaded.value = v);
+
+    // ad listener
+    RewardedVideoAd.instance.listener = (RewardedVideoAdEvent event, {String rewardType, int rewardAmount})async {
+      if (event == RewardedVideoAdEvent.closed) {
+        RewardedVideoAd.instance
+            .load(adUnitId:
+       // 'ca-app-pub-2814422544312075/4895932406',
+             RewardedVideoAd.testAdUnitId,
+           // targetingInfo: targetingInfo
+        )
+            .catchError((e) {
+          print('nice');
+          print("error in loading again");
+        })
+            .then((v) =>loaded.value = v);
+      }
+
+
+      if (event == RewardedVideoAdEvent.rewarded) {
+
+
+          box.write('coins', box.read('coins')+2);
+          checkFirstTime();
+
+
+      }
+      if(event == RewardedVideoAdEvent.closed){
+        timecontroller.resume();
+      }
+
+      if(event == RewardedVideoAdEvent.failedToLoad){
+        // disableAnswer = true;
+        //  AppLovin.requestInterstitial(
+        //          (AppLovinAdListener event) => listener(event,false),
+        //      interstitial: false);
+      }
+    };
+
+
+  }
+
+  void resolveQuestion(){
+
+    if(box.read('coins') >= 3) {
+
+
+
+        box.write('coins', box.read('coins') - 3);
+
+        checkFirstTime();
+
+       // isAds = false;
+        correctTime = 0;
+        List choice = ["a","b","c","d"];
+
+        for(int aa=0; aa<choice.length;aa++){
+          if (quizDataList[2][indexQuestionRandom.toString()] == quizDataList[1][indexQuestionRandom.toString()][choice[aa]]){
+
+            checkanswer(choice[aa]);
+
+          }
+        }
+
+
+
+
+    }
+    else{
+      Fluttertoast.showToast(msg: 'لا يوجد لديك عملات كافية',);
+    }
+
+  }
+
+  void watchRewardAD()async{
+
+    timecontroller.pause();
+    await RewardedVideoAd.instance.show().catchError((e) {
+      print('nice');
+      print("error in showing ad: ${e.toString()}");
+      // AppLovin.requestInterstitial(
+      //       (AppLovinAdListener event) =>listener(event,false),
+      //   interstitial: false,);
+    });
+    loaded.value = false;
+
+  }
+
+
+  RxBool isVisible = false.obs ;
+
+  void showRewardButton() {
+
+    if(box.read('shaddat') <340){
+      isVisible.value = false;
+    }
+    if(box.read('shaddat') >=340){
+
+        isVisible.value = !isVisible.value;
+
+
+
+    }
+
   }
 }

@@ -23,6 +23,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: "من سيربح الشدات",
       theme: ThemeData(
+        fontFamily: 'Raleway',
         primarySwatch: Colors.indigo,
       ),
       home: homepage(),

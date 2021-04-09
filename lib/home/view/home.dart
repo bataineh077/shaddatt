@@ -97,26 +97,12 @@ class _homepageState extends State<homepage> {
 //    );
 //  }
 
-  BannerAd _bannerAd;
-  InterstitialAd _interstitialAd;
-  int _coins = 0;
 
-  BannerAd createBannerAd() {
-    return BannerAd(
-      adUnitId: BannerAd.testAdUnitId,
-      size: AdSize.banner,
-
-      listener: (MobileAdEvent event) {
-        print("BannerAd event $event");
-      },
-    );
-  }
 
 
 
   @override
   void initState() {
-    FirebaseAdMob.instance.initialize(appId: 'ca-app-pub-2814422544312075~1911331018');
    // _bannerAd = createBannerAd()..load()..show();
     // TODO: implement initState
     super.initState();
@@ -124,12 +110,6 @@ class _homepageState extends State<homepage> {
 
   var controller = Get.put(QuizController());
 
-  @override
-  void dispose() {
-    _bannerAd?.dispose();
-    // TODO: implement dispose
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
