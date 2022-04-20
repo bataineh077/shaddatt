@@ -2,11 +2,15 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_admob/firebase_admob.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timer_count_down/timer_controller.dart';
 
 import 'audioManager/AudioManager.dart';
@@ -16,6 +20,7 @@ class QuizController extends GetxController{
 
   final box = GetStorage();
   final rand = new Random();
+
 
   RxInt indexQuestionOrdered = 0.obs;
   RxInt indexQuestionRandom = 0.obs;
@@ -42,6 +47,7 @@ class QuizController extends GetxController{
     "c": Colors.indigo,
     "d": Colors.indigo,
   }.obs;
+
 
 
   updateScoreValue(value)=>box.write('score', value);
@@ -95,14 +101,31 @@ class QuizController extends GetxController{
 
 
   checkFirstTime()async{
+    
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
 
     if(!box.hasData('first')) {
       box.write('first', true);
 
-      updateCoinsValue(0);
-      updateFalseAwnserValue(0);
-      updateScoreValue(0);
-      updateShaddatValue(0);
+      if( prefs.containsKey('first') ){
+        prefs.setBool('first', true);
+
+        updateCoinsValue(prefs.getInt('coins'));
+        updateFalseAwnserValue(prefs.getInt('false'));
+        updateScoreValue(prefs.getInt('score'));
+        updateShaddatValue(prefs.getInt('shaddat'));
+
+      }else{
+
+        updateCoinsValue(0);
+        updateFalseAwnserValue(0);
+        updateScoreValue(0);
+        updateShaddatValue(0);
+
+      }
+
+
 
     }
     else{
@@ -269,10 +292,10 @@ class QuizController extends GetxController{
       // changing the color variable to be green
       colortoshow.value = right;
 
-      if(correctTime <1 && isAds){
+      if(correctTime <4 && isAds){
         correctTime ++;
         Timer(Duration(seconds: 1), nextQuestion);
-      }else if(correctTime==1 && isAds){
+      }else if(correctTime==4 && isAds){
 
         correctTime = 0;
         interstitialAd?.dispose();
@@ -290,13 +313,13 @@ class QuizController extends GetxController{
       // just a print sattement to check the correct working
       // debugPrint(mydata[2]["1"] + " is equal to " + mydata[1]["1"][k]);
       colortoshow.value = wrong;
-      if( isAds && inCorrectTime <1){
+      if( isAds && inCorrectTime <4){
         inCorrectTime++;
         Timer(Duration(seconds: 1), nextQuestion);
 
 
 
-      }else if(inCorrectTime==1 && isAds){
+      }else if(inCorrectTime==4 && isAds){
 
         inCorrectTime = 0;
         interstitialAd?.dispose();
@@ -312,7 +335,7 @@ class QuizController extends GetxController{
       btncolor[k] = colortoshow.value;
       timecontroller.pause();
       disableAnswer.value = true;
-
+    showRewardButton();
 
 
     // nextquestion();
@@ -327,8 +350,8 @@ class QuizController extends GetxController{
     // https://developers.google.com/admob/android/test-ads
     // https://developers.google.com/admob/ios/test-ads
     adUnitId:
-     BannerAd.testAdUnitId,
-    //'ca-app-pub-2814422544312075/2043685194',
+    // BannerAd.testAdUnitId,
+    'ca-app-pub-2814422544312075/2043685194',
     size: AdSize.banner,
     //  targetingInfo: targetingInfo,
     listener: (MobileAdEvent event) {
@@ -342,8 +365,8 @@ class QuizController extends GetxController{
 
     return InterstitialAd(
       adUnitId:
-     // 'ca-app-pub-2814422544312075/9539031839',
-      InterstitialAd.testAdUnitId,
+      'ca-app-pub-2814422544312075/9539031839',
+     // InterstitialAd.testAdUnitId,
     //  targetingInfo: targetingInfo,
       listener: (MobileAdEvent event) {
         // print("InterstitialAd event $event");
@@ -364,7 +387,7 @@ class QuizController extends GetxController{
             nextQuestion();
 
           } );
-          timecontroller.resume();
+          timecontroller.restart();
 
         }
         if(event.toString() == 'MobileAdEvent.failedToLoad'){
@@ -378,30 +401,79 @@ class QuizController extends GetxController{
     );
   }
 
+  RxBool isLoading = false.obs;
+
+  Rx<ConnectivityResult> connectionStatus = ConnectivityResult.none.obs;
+  final Connectivity _connectivity = Connectivity();
+   StreamSubscription<ConnectivityResult> _connectivitySubscription;
+
+  // Platform messages are asynchronous, so we initialize in an async method.
+  Future<void> initConnectivity() async {
+     ConnectivityResult result;
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    try {
+      result = await _connectivity.checkConnectivity();
+    } on PlatformException catch (e) {
+      print(e.toString());
+      return;
+    }
+
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
+
+
+    return _updateConnectionStatus(result);
+  }
+
+  Future<void> _updateConnectionStatus(ConnectivityResult result) async {
+    connectionStatus.value = result;
+  }
   @override
   void onInit() {
     // TODO: implement onInit
 
-    getQuizData().whenComplete(() {
-      if(quizDataList.isNotEmpty) {
-        genRandomArray();
-        indexQuestionRandom.value = rand.nextInt(quizDataList[0].length);
-      }
-    });
+    initConnectivity();
 
-    checkFirstTime();
+    _connectivitySubscription =
+        _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
 
 
-    myBanner
-      ..load()
-      ..show(
-        anchorType: AnchorType.top,
-        anchorOffset: kToolbarHeight -25,
-      );
+    try{
 
 
-    initAdReward();
-    createInterstitialAd();
+      isLoading(true);
+
+      getQuizData().whenComplete(() {
+        if(quizDataList.isNotEmpty) {
+          genRandomArray();
+          indexQuestionRandom.value = rand.nextInt(quizDataList[0].length);
+        }
+      }).whenComplete(() =>  isLoading(false));
+
+      checkFirstTime();
+
+
+      myBanner
+        ..load()
+        ..show(
+          anchorType: AnchorType.top,
+          anchorOffset: kToolbarHeight -25,
+        );
+
+
+      initAdReward();
+      createInterstitialAd();
+    }catch(e){
+
+    }
+    finally{
+     // isLoading(false);
+
+      AudioManager.playSong();
+
+    }
+
     super.onInit();
   }
 
@@ -434,8 +506,8 @@ class QuizController extends GetxController{
       if (event == RewardedVideoAdEvent.closed) {
         RewardedVideoAd.instance
             .load(adUnitId:
-       // 'ca-app-pub-2814422544312075/4895932406',
-             RewardedVideoAd.testAdUnitId,
+        'ca-app-pub-2814422544312075/4895932406',
+           //  RewardedVideoAd.testAdUnitId,
            // targetingInfo: targetingInfo
         )
             .catchError((e) {
@@ -449,9 +521,8 @@ class QuizController extends GetxController{
       if (event == RewardedVideoAdEvent.rewarded) {
 
 
-          box.write('coins', box.read('coins')+2);
+          box.write('coins', box.read('coins') + 2);
           checkFirstTime();
-
 
       }
       if(event == RewardedVideoAdEvent.closed){
@@ -520,16 +591,106 @@ class QuizController extends GetxController{
 
   void showRewardButton() {
 
-    if(box.read('shaddat') <340){
+    if(box.read('shaddat') < 340){
       isVisible.value = false;
     }
     if(box.read('shaddat') >=340){
 
-        isVisible.value = !isVisible.value;
+        isVisible.value = true;
 
 
 
     }
 
   }
+
+
+  withDrawShaddat(){
+
+    timecontroller.pause();
+    showDialog(barrierDismissible: false,
+        context: Get.context,
+        builder: (context) => AlertDialog(
+
+          title: Text(
+            "مبروك !! "
+                "\n"
+                " سيتم شحن 340 شدة على ID "
+                "\n"
+                "وقت التسليم حتى 48 ساعة ",textAlign: TextAlign.center,
+            textDirection: TextDirection.rtl,
+          ),
+          content: SizedBox(
+            height:MediaQuery.of(context).size.height/6 ,
+            width: double.infinity,
+            child: Column(
+              children: [
+                TextField(
+                  maxLength: 10,
+                  keyboardType: TextInputType.number,
+                  controller: userPubgID,
+                  decoration: InputDecoration(
+                    labelText: 'ID',
+                    alignLabelWithHint: true,
+                    hintText: 'ادخل ID هنا',
+                  ),
+                )
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            FlatButton(
+              color: Colors.lightGreen,
+              onPressed: ()async {
+
+                if(userPubgID.text.length ==10){
+                  print('${userPubgID.text.length}');
+                  FirebaseDatabase().reference().child('Shaddat')
+                      .push().set({
+                    "ID": userPubgID.text,
+                    "date":DateTime.now().toIso8601String(),
+
+                  }).then((v) async{
+                    print('done');
+
+                    updateShaddatValue(box.read('shaddat') - 340);
+                    updateFalseAwnserValue(0);
+                    updateScoreValue(0);
+
+                    userPubgID.clear();
+
+                    timecontroller.resume();
+                    Navigator.pop(context);
+
+                    showRewardButton();
+                  });
+                }
+                else{
+                  Fluttertoast.showToast(msg: 'الرقم خاطئ');
+                }
+
+              },
+              child: Text(
+                'ارسال',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 15
+                  ,color: Colors.white),
+              ),
+            ),
+
+            FlatButton(
+              color: Colors.redAccent,
+              onPressed: () async{
+                timecontroller.resume();
+                Navigator.pop(context);
+              },
+              child: Text(
+                'الغاء',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 15),
+              ),
+            ),
+          ],
+        ));
+
+  }
+
+
+
 }
